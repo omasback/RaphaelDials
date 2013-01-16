@@ -1,0 +1,12 @@
+/* line 3, ../../app/styles/main.scss */
+.dialcontainer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+/* line 7, ../../app/styles/main.scss */
+.dialcontainer > div {
+  margin-left: -50%;
+  margin-top: -50%;
+  display: block !important;
+}
