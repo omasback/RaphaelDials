@@ -80,9 +80,12 @@ var RaphaelDials = {
         ,
 
         dash = paper
-          .path()
+          .circle(center, center, radius)
           .attr({
-            dash: [radius, center, this.options.strokeWidth]
+            //dash: [radius, center, this.options.strokeWidth],
+            stroke: "#000000", 
+            opacity: .1, 
+            "stroke-width": this.options.strokeWidth
           })
         ,
 
@@ -114,7 +117,13 @@ var RaphaelDials = {
                     relativeValue + dialData.absoluteMin
                   );
               
+              //debugger
+
               this.attr({scrubber: [relativeValue, relativeMax, radius, center, dialData.strokeWidth]})
+
+              //this.prev.prev.prev.remove();
+
+              console.log(this.prev.getBBox())
               
               this.prev.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth, dialData.color ]});
               
@@ -187,7 +196,7 @@ var RaphaelDials = {
           opacity = .1,
           path = [
             ["M", center, center - radius], 
-            ["A", radius, radius, 0, 1, 1, center-.01, center - radius]
+            ["A", radius, radius, 0, 1, 1, center, center - radius]
           ];
       
       return {
