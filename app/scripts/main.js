@@ -35,6 +35,7 @@ var SVGDials = {
 
       paper.customAttributes.arc = this.customAttributes.arc;
       paper.customAttributes.dash = this.customAttributes.dash;
+      paper.customAttributes.scrubber = this.customAttributes.scrubber;
       
       for (var i = 0; i < $els.length; i++) {
         var $el = $els.eq(i),
@@ -54,12 +55,40 @@ var SVGDials = {
     var total = $el.attr("max") - $el.attr("min"),
         value = +$el.attr("value") || 0,
         mid = this.options.size/2,
+
         sec = paper.path().attr({
           arc: [value, total, radius, mid, this.options.strokeWidth, color]
         }),
+
         dash = paper.path().attr({
           dash: [radius, mid, this.options.strokeWidth]
-        });
+        }),
+
+        scrubber = paper
+          .circle()
+          .attr({
+            scrubber: [value, total, radius, mid, this.options.strokeWidth]
+          })
+          .drag(
+            function(dx,dy,x,y,event){
+                return
+            }
+          )
+          .touchmove(
+            function(event){
+
+              var value = xyToValue.call(this, event);
+              
+              this.attr({scrubber: [value, total, radius, this.options.strokeWidth]})
+              
+              this.prev.prev.attr({arc: [value, total, R]});
+              
+              var inputVal = parseInt(value + parseInt($("#value1").attr("min")))
+              
+              $el.val(inputVal);
+
+            }
+          );
 
         $(dash.node).attr("stroke-dasharray", "7,2")
 
@@ -115,10 +144,45 @@ var SVGDials = {
         "stroke-width": strokeWidth
       };
 
+    },
+
+    scrubber: function (value, total, radius, mid, strokeWidth) {
+      
+      var angle = 360 / total * value,
+          a = (90 - angle) * Math.PI / 180,
+          cx = mid + radius * Math.cos(a),
+          cy = mid - radius * Math.sin(a),
+          r = strokeWidth / 2 + 2,
+          color = "#B3B3B3",
+          fill = "90-#e0e1e2-#fff",
+          scrubberStroke = 1;
+
+      return {
+        cx: cx, 
+        cy: cy, 
+        r: r, 
+        stroke: color, 
+        fill: fill, 
+        "stroke-width": scrubberStroke
+      };
+
     }
 
+  },
 
+  xyToValue: function(e) {
 
+    var x = e.changedTouches[0].pageX //+ scrollX//(typeof e.pageX !== 'undefined') ? e.pageX : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : null),
+        y = e.changedTouches[0].pageY //+ scrollY//(typeof e.pageY !== 'undefined') ? e.pageY : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : null);
+
+    //$("#value1").val(x);
+
+    posx = x  - $(this.paper.canvas).offset().left - 300;
+    posy = y  - $(this.paper.canvas).offset().top - 300;
+    var angle = Math.atan2(posy, posx) / Math.PI * 180 + 90
+    var angle = (angle < 0 ? angle+360 : angle)
+    var value = angle * total / 360;
+    return value
   }
 
 
