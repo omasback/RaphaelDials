@@ -1,12 +1,1 @@
 //@import "compass_twitter_bootstrap";
-
-.dialcontainer {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  > div {
-    margin-left: -50%;
-    margin-top: -50%;
-    display: block !important;
-  }
-}

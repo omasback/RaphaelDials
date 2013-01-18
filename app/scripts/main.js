@@ -39,7 +39,6 @@ var SVGDials = {
       
       for (var i = 0; i < $els.length; i++) {
         var $el = $els.eq(i),
-            //el = $el[0]
             currentColor = this.options.colors[i];
         
         this.initDial($el, paper, currentRadius, currentColor);
@@ -56,30 +55,60 @@ var SVGDials = {
         value = +$el.attr("value") || 0,
         mid = this.options.size/2,
 
-        sec = paper.path().attr({
-          arc: [value, total, radius, mid, this.options.strokeWidth, color]
-        }),
+        dialData = {
+          $el: $el,
+          total: total,
+          mid: mid,
+          strokeWidth: this.options.strokeWidth,
+          color: color
+        }
 
-        dash = paper.path().attr({
-          dash: [radius, mid, this.options.strokeWidth]
-        }),
+        sec = paper
+          .path()
+          .attr({
+            arc: [value, total, radius, mid, this.options.strokeWidth, color]
+          })
+        ,
+
+        dash = paper
+          .path()
+          .attr({
+            dash: [radius, mid, this.options.strokeWidth]
+          })
+        ,
 
         scrubber = paper
           .circle()
+          .data( "dialData", dialData )
           .attr({
             scrubber: [value, total, radius, mid, this.options.strokeWidth]
           })
           .drag(
             function(dx,dy,x,y,event){
-                return
+
+                var dialData = this.data("dialData"),
+                    value = SVGDials.xyToValue.call(this, event),
+                    inputVal = parseInt(
+                      value + parseInt($("#value1").attr("min"))
+                    );
+                
+                this.attr({scrubber: [value, total, radius, mid, dialData.strokeWidth]})
+                
+                this.prev.prev.attr({arc: [ value, total, radius, mid, dialData.strokeWidth, dialData.color ]});
+                
+                dialData.$el.val(inputVal);
+
+
             }
           )
           .touchmove(
             function(event){
 
+              return
+
               var value = xyToValue.call(this, event);
               
-              this.attr({scrubber: [value, total, radius, this.options.strokeWidth]})
+              this.attr({scrubber: [value, total, radius, mid, this.options.strokeWidth]})
               
               this.prev.prev.attr({arc: [value, total, R]});
               
@@ -172,16 +201,18 @@ var SVGDials = {
 
   xyToValue: function(e) {
 
-    var x = e.changedTouches[0].pageX //+ scrollX//(typeof e.pageX !== 'undefined') ? e.pageX : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : null),
-        y = e.changedTouches[0].pageY //+ scrollY//(typeof e.pageY !== 'undefined') ? e.pageY : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : null);
+    var dialData = this.data("dialData")
+
+    var x = (typeof e.pageX !== 'undefined') ? e.pageX : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : null),
+        y = (typeof e.pageY !== 'undefined') ? e.pageY : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : null);
 
     //$("#value1").val(x);
 
-    posx = x  - $(this.paper.canvas).offset().left - 300;
-    posy = y  - $(this.paper.canvas).offset().top - 300;
+    var posx = x  - $(this.paper.canvas).offset().left - dialData.mid;
+    var posy = y  - $(this.paper.canvas).offset().top - dialData.mid;
     var angle = Math.atan2(posy, posx) / Math.PI * 180 + 90
     var angle = (angle < 0 ? angle+360 : angle)
-    var value = angle * total / 360;
+    var value = angle * dialData.total / 360;
     return value
   }
 
@@ -372,7 +403,15 @@ $(document).ready(function() {
                     .attr({scrubber: [value, total, R, strokeWidth]})
                     .drag(
                         function(dx,dy,x,y,event){
-                            return
+                          var value = xyToValue.call(this, event);
+                          
+                          this.attr({scrubber: [value, total, radius, this.options.strokeWidth]})
+                          
+                          this.prev.prev.attr({arc: [value, total, R]});
+                          
+                          var inputVal = parseInt(value + parseInt($("#value1").attr("min")))
+                          
+                          $el.val(inputVal);
                         }
                     )
                     .touchmove(
@@ -391,21 +430,21 @@ $(document).ready(function() {
                     )
                 ;
 
-                xyToValue = function(e) {
+                // xyToValue = function(e) {
 
-                    var x = e.changedTouches[0].pageX //+ scrollX//(typeof e.pageX !== 'undefined') ? e.pageX : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : null),
-                        y = e.changedTouches[0].pageY //+ scrollY//(typeof e.pageY !== 'undefined') ? e.pageY : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : null);
+                //     var x = (typeof e.pageX !== 'undefined') ? e.pageX : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : null),//e.changedTouches[0].pageX //+ scrollX//(typeof e.pageX !== 'undefined') ? e.pageX : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : null),
+                //         y = (typeof e.pageY !== 'undefined') ? e.pageY : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : null);//e.changedTouches[0].pageY //+ scrollY//(typeof e.pageY !== 'undefined') ? e.pageY : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : null);
 
 
-                    $("#value1").val(x);
+                //     $("#value1").val(x);
 
-                    posx = x  - $(this.paper.canvas).offset().left - 300;
-                    posy = y  - $(this.paper.canvas).offset().top - 300;
-                    var angle = Math.atan2(posy, posx) / Math.PI * 180 + 90
-                    var angle = (angle < 0 ? angle+360 : angle)
-                    var value = angle * total / 360;
-                    return value
-                }
+                //     posx = x  - $(this.paper.canvas).offset().left - 300;
+                //     posy = y  - $(this.paper.canvas).offset().top - 300;
+                //     var angle = Math.atan2(posy, posx) / Math.PI * 180 + 90
+                //     var angle = (angle < 0 ? angle+360 : angle)
+                //     var value = angle * total / 360;
+                //     return value
+                // }
                 //var secScrub = paper.circle((300+R*Math.cos(360 / total * value)), 300-R*Math.sin(360 / total * value), 20);
                 //R -= 36;
                 //drawMarks(R, 60);
