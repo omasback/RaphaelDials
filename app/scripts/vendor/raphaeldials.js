@@ -8,7 +8,6 @@ http://blog.bigbinary.com/2010/03/12/pratical-example-of-need-for-prototypal-inh
 
 */
 
-
 var RaphaelDials = {
   
   init: function(options, el) {
@@ -40,7 +39,6 @@ var RaphaelDials = {
           paper = Raphael(this.$el[0], this.options.size, this.options.size);
 
       paper.customAttributes.arc = this.customAttributes.arc;
-      paper.customAttributes.dash = this.customAttributes.dash;
       paper.customAttributes.scrubber = this.customAttributes.scrubber;
       
       for (var i = 0; i < $els.length; i++) {
@@ -82,7 +80,6 @@ var RaphaelDials = {
         dash = paper
           .circle(center, center, radius)
           .attr({
-            //dash: [radius, center, this.options.strokeWidth],
             stroke: "#000000", 
             opacity: .1, 
             "stroke-width": this.options.strokeWidth
@@ -109,21 +106,13 @@ var RaphaelDials = {
           .drag(
             function(dx,dy,x,y,event){
 
-              //console.log(event)
-
               var dialData = this.data("dialData"),
                   relativeValue = RaphaelDials.xyToValue.call(this, event),
                   inputVal = parseInt(
                     relativeValue + dialData.absoluteMin
                   );
-              
-              //debugger
 
               this.attr({scrubber: [relativeValue, relativeMax, radius, center, dialData.strokeWidth]})
-
-              //this.prev.prev.prev.remove();
-
-              console.log(this.prev.getBBox())
               
               this.prev.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth, dialData.color ]});
               
@@ -134,8 +123,6 @@ var RaphaelDials = {
           .touchmove(
             function(event){
 
-              debugger
-
               var dialData = this.data("dialData"),
                   relativeValue = RaphaelDials.xyToValue.call(this, event),
                   inputVal = parseInt(
@@ -144,7 +131,7 @@ var RaphaelDials = {
               
               this.attr({scrubber: [relativeValue, relativeMax, radius, center, dialData.strokeWidth]})
               
-              this.prev.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth, dialData.color ]});
+              this.prev.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth ]});
               
               dialData.$el.val(inputVal);
 
@@ -188,24 +175,6 @@ var RaphaelDials = {
         path: path, 
       };
     
-    },
-
-    dash: function (radius, center, strokeWidth) {
-      
-      var color = "#000000",
-          opacity = .1,
-          path = [
-            ["M", center, center - radius], 
-            ["A", radius, radius, 0, 1, 1, center, center - radius]
-          ];
-      
-      return {
-        path: path, 
-        stroke: color, 
-        opacity: opacity, 
-        "stroke-width": strokeWidth
-      };
-
     },
 
     scrubber: function (relativeValue, relativeMax, radius, center, strokeWidth) {
