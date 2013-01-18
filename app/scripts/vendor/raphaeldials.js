@@ -71,8 +71,11 @@ var RaphaelDials = {
 
         sec = paper
           .path()
+          .attr("stroke", "none")
           .attr({
-            arc: [relativeValue, relativeMax, radius, center, this.options.strokeWidth, color]
+            arc: [relativeValue, relativeMax, radius, center, this.options.strokeWidth, color],
+            fill: "180-"+color[0]+"-"+color[1],
+            stroke: "none"
           })
         ,
 
@@ -95,12 +98,15 @@ var RaphaelDials = {
           .circle()
           .data( "dialData", dialData )
           .attr({
-            scrubber: [relativeValue, relativeMax, radius, center, this.options.strokeWidth]
+            scrubber: [relativeValue, relativeMax, radius, center, this.options.strokeWidth],
+            stroke: "#B3B3B3",
+            "stroke-width": 1,
+            fill: "90-#e0e1e2-#fff"
           })
           .drag(
             function(dx,dy,x,y,event){
 
-              console.log(event)
+              //console.log(event)
 
               var dialData = this.data("dialData"),
                   relativeValue = RaphaelDials.xyToValue.call(this, event),
@@ -142,7 +148,7 @@ var RaphaelDials = {
 
   customAttributes: {
 
-    arc: function (relativeValue, relativeMax, radius, center, strokeWidth, color) {
+    arc: function (relativeValue, relativeMax, radius, center, strokeWidth) {
       
       var angle = 360 / relativeMax * relativeValue, // 
           a = (90 - angle) * Math.PI / 180,
@@ -171,8 +177,6 @@ var RaphaelDials = {
       
       return {
         path: path, 
-        stroke: "none",
-        fill: "180-"+color[0]+"-"+color[1]
       };
     
     },
@@ -201,18 +205,12 @@ var RaphaelDials = {
           a = (90 - angle) * Math.PI / 180,
           cx = center + radius * Math.cos(a),
           cy = center - radius * Math.sin(a),
-          r = strokeWidth / 2 + 2,
-          color = "#B3B3B3",
-          fill = "90-#e0e1e2-#fff",
-          scrubberStroke = 1;
+          r = strokeWidth / 2 + 2;
 
       return {
         cx: cx, 
         cy: cy, 
         r: r, 
-        stroke: color, 
-        fill: fill, 
-        "stroke-width": scrubberStroke
       };
 
     }
@@ -231,6 +229,7 @@ var RaphaelDials = {
     var angle = Math.atan2(posy, posx) / Math.PI * 180 + 90
     var angle = (angle < 0 ? angle+360 : angle)
     var relativeValue = angle * dialData.relativeMax / 360;
+    
     return relativeValue
   }
 
