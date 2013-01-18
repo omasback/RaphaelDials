@@ -1,4 +1,159 @@
+/*
+
+jquery plugin template based on
+
+http://alexsexton.com/blog/2010/02/using-inheritance-patterns-to-organize-large-jquery-applications/
+
+http://blog.bigbinary.com/2010/03/12/pratical-example-of-need-for-prototypal-inheritance.html
+
+*/
+
+
+var SVGDials = {
+  
+  init: function(options, el) {
+      this.options = $.extend(
+        {},this.options, options
+      );
+
+      this.el = el;
+      this.$el = $(el);
+
+      this._build();
+  },
+
+  options: {
+      size: 290,
+      strokeWidth: 30,
+      colors: ["#eb4e36", "#eb7f24", "#3d9900", "#0376bf", "#573f70"]
+  },
+
+  _build: function() {
+      var $els = this.$el.find("input[type='number']"),
+          currentRadius = this.options.size / 2 - this.options.strokeWidth / 2 - 2,
+          paper = Raphael(this.$el[0], this.options.size, this.options.size);
+
+      paper.customAttributes.arc = this.customAttributes.arc;
+      paper.customAttributes.dash = this.customAttributes.dash;
+      
+      for (var i = 0; i < $els.length; i++) {
+        var $el = $els.eq(i),
+            //el = $el[0]
+            currentColor = this.options.colors[i];
+        
+        this.initDial($el, paper, currentRadius, currentColor);
+
+        currentRadius -= this.options.strokeWidth + 10;
+
+      };
+
+  },
+
+  initDial: function($el, paper, radius, color) {
+    
+    var total = $el.attr("max") - $el.attr("min"),
+        value = +$el.attr("value") || 0,
+        mid = this.options.size/2,
+        sec = paper.path().attr({
+          arc: [value, total, radius, mid, this.options.strokeWidth, color]
+        }),
+        dash = paper.path().attr({
+          dash: [radius, mid, this.options.strokeWidth]
+        });
+
+        $(dash.node).attr("stroke-dasharray", "7,2")
+
+  },
+
+  customAttributes: {
+
+    arc: function (value, total, radius, mid, strokeWidth, color) {
+      
+      var angle = 360 / total * value, // 
+          a = (90 - angle) * Math.PI / 180,
+          x = mid + radius * Math.cos(a),
+          y = mid - radius * Math.sin(a),
+          path;
+
+      if (total == value) {
+          
+          path = [
+            ["M", mid, mid - radius], 
+            ["A", radius, radius, 0, 1, 1, mid-.01, mid - radius]
+          ];
+
+      } else {
+          
+          path = [
+            ["M", mid, mid - radius], 
+            ["A", radius, radius, 0, +(angle > 180), 1, x, y]
+          ];
+
+      }
+      
+      return {
+        path: path, 
+        stroke: color, 
+        "stroke-width": strokeWidth
+      };
+    
+    },
+
+    dash: function (radius, mid, strokeWidth) {
+      
+      var color = "#000000",
+          opacity = .1,
+          path = [
+            ["M", mid, mid - radius], 
+            ["A", radius, radius, 0, 1, 1, mid-.01, mid - radius]
+          ];
+      
+      return {
+        path: path, 
+        stroke: color, 
+        opacity: opacity, 
+        "stroke-width": strokeWidth
+      };
+
+    }
+
+
+
+  }
+
+
+};
+
+// Make sure Object.create is available in the browser (for our prototypal inheritance)
+if (typeof Object.create !== 'function') {
+  Object.create = function(o) {
+      function F() {}
+      F.prototype = o;
+      return new F();
+  };
+}
+
+$(function() {
+  $.fn.svgDials = function(options) {
+      if (this.length) {
+          return this.each(function() {
+              var myDials = Object.create(SVGDials);
+              myDials.init(options, this);
+              //$.data(this, 'svgDials', myDials);
+          });
+      }
+  };
+});
+
+
 $(document).ready(function() {
+
+  
+  $('.dials').svgDials({
+    size: 400,
+    strokeWidth: 30,
+    colors: ["#3d9900", "#eb7f24"]
+  });
 
   // $("#dial1")
   //     .dial({
@@ -86,12 +241,12 @@ $(document).ready(function() {
   //   };
 
 
-                var size = 600,
-                    maxRad = size/2,
+                var //size = 600,
+                    maxRad = 300,
                     strokeWidth = 30,
                     value = 30,
-                    total = $("#value").attr("max") - $("#value").attr("min"),
-                    paper = Raphael("holder", size, size),
+                    total = $("#value1").attr("max") - $("#value1").attr("min"),
+                    paper = Raphael("holder", 600, 600),
                     R = 200,
                     init = true,
                     param = {"stroke-width": strokeWidth};
@@ -138,8 +293,8 @@ $(document).ready(function() {
                         r = strokeWidth / 2 + 2,
                         color = "#B3B3B3",
                         fill = "90-#e0e1e2-#fff",
-                        scrubberStroke = 1,
-                        size = this.size;
+                        scrubberStroke = 1;
+                        //size = this.size;
 
                     return {cx: cx, cy: cy, r: r, stroke: color, fill: fill, "stroke-width": scrubberStroke};
                 };
@@ -165,8 +320,8 @@ $(document).ready(function() {
                             
                             this.prev.prev.attr({arc: [value, total, R]});
                             
-                            var inputVal = parseInt(value + parseInt($("#value").attr("min")))
-                            $("#value").val(inputVal);
+                            var inputVal = parseInt(value + parseInt($("#value1").attr("min")))
+                            $("#value1").val(inputVal);
 
                         }
                     )
@@ -177,11 +332,11 @@ $(document).ready(function() {
                     var x = e.changedTouches[0].pageX //+ scrollX//(typeof e.pageX !== 'undefined') ? e.pageX : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : null),
                         y = e.changedTouches[0].pageY //+ scrollY//(typeof e.pageY !== 'undefined') ? e.pageY : ((typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : null);
 
-                    //alert(e.touches[0].pageX);
-                    $("#value").val(x);
 
-                    posx = x  - $(this.paper.canvas).offset().left - size/2;
-                    posy = y  - $(this.paper.canvas).offset().top - size/2;
+                    $("#value1").val(x);
+
+                    posx = x  - $(this.paper.canvas).offset().left - 300;
+                    posy = y  - $(this.paper.canvas).offset().top - 300;
                     var angle = Math.atan2(posy, posx) / Math.PI * 180 + 90
                     var angle = (angle < 0 ? angle+360 : angle)
                     var value = angle * total / 360;
