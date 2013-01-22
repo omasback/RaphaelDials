@@ -86,13 +86,13 @@ var RaphaelDials = {
           })
         ,
 
-        mask = paper
-          .circle(center, center, radius-this.options.strokeWidth/2)
-          .attr({
-            fill: "#fff",
-            stroke: "none"
-          })
-        ,
+        // mask = paper
+        //   .circle(center, center, radius-this.options.strokeWidth/2)
+        //   .attr({
+        //     fill: "#fff",
+        //     stroke: "none"
+        //   })
+        // ,
 
         scrubber = paper
           .circle()
@@ -114,9 +114,10 @@ var RaphaelDials = {
 
               this.attr({scrubber: [relativeValue, relativeMax, radius, center, dialData.strokeWidth]})
               
-              this.prev.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth, dialData.color ]});
+              this.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth, dialData.color ]});
               
-              dialData.$el.val(inputVal);
+              //mc changed to add .change(), triggering the event
+              dialData.$el.val(inputVal).change();
 
             }
           )
@@ -131,9 +132,10 @@ var RaphaelDials = {
               
               this.attr({scrubber: [relativeValue, relativeMax, radius, center, dialData.strokeWidth]})
               
-              this.prev.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth ]});
+              this.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth ]});
               
-              dialData.$el.val(inputVal);
+               //mc changed to add .change(), triggering the event
+              dialData.$el.val(inputVal).change();
 
             }
           );
@@ -148,28 +150,19 @@ var RaphaelDials = {
       
       var angle = 360 / relativeMax * relativeValue, // 
           a = (90 - angle) * Math.PI / 180,
-          radius = radius + strokeWidth / 2,
-          x = center + radius * Math.cos(a),
-          y = center - radius * Math.sin(a),
-
-          path;
-
-      if (relativeMax == relativeValue) {
-          
+          outerRadius = radius + strokeWidth / 2,
+          outerX = center + outerRadius * Math.cos(a),
+          outerY = center - outerRadius * Math.sin(a),
+          innerRadius = radius - strokeWidth / 2,
+          innerX = center + innerRadius * Math.cos(a),
+          innerY = center - innerRadius * Math.sin(a),
           path = [
-            ["M", center, center - radius], 
-            ["A", radius, radius, 0, 1, 1, center-.01, center - radius]
+            ["M", center, center - innerRadius],
+            ["L", center, center - outerRadius], 
+            ["A", outerRadius, outerRadius, 0, +(angle > 180), 1, outerX, outerY],
+            ["L", innerX, innerY], 
+            ["A", innerRadius, innerRadius, 0, +(angle > 180), 0, center, center - innerRadius]
           ];
-
-      } else {
-          
-          path = [
-            ["M", center, center],
-            ["L", center, center - radius], 
-            ["A", radius, radius, 0, +(angle > 180), 1, x, y]
-          ];
-
-      }
       
       return {
         path: path, 
