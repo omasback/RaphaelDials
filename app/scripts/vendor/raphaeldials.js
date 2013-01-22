@@ -58,6 +58,40 @@ var RaphaelDials = {
         relativeValue = +$el.attr("value") - $el.attr("min") || 0,
         center = this.options.size/2,
 
+        dragHandler = function(dx,dy,x,y,event){
+
+          if (arguments.length < 5) {
+            event = dx;
+          }
+
+          event.preventDefault();
+
+          var dialData = this.data("dialData"),
+              relativeValue = xyToValue.call(this, event),
+              inputVal = parseInt(
+                relativeValue + dialData.absoluteMin
+              );
+
+          this.attr({scrubber: [relativeValue, relativeMax, radius, center, dialData.strokeWidth]})
+          
+          this.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth ]});
+          
+          dialData.$el.val(inputVal).change();
+        },
+
+        xyToValue = function(e) {
+
+          var x = (typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : ((typeof e.pageX !== 'undefined') ? e.pageX : null),
+              y = (typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : ((typeof e.pageY !== 'undefined') ? e.pageY : null),
+              posx = x - $(this.paper.canvas).offset().left - center,
+              posy = y - $(this.paper.canvas).offset().top - center,
+              angle = Math.atan2(posy, posx) / Math.PI * 180 + 90,
+              angle = (angle < 0 ? angle+360 : angle),
+              relativeValue = angle * relativeMax / 360;
+          
+          return relativeValue
+        },
+
         dialData = {
           $el: $el,
           relativeMax: relativeMax,
@@ -66,6 +100,7 @@ var RaphaelDials = {
           strokeWidth: this.options.strokeWidth,
           color: color
         }
+        ,
 
         sec = paper
           .path()
@@ -74,7 +109,8 @@ var RaphaelDials = {
             arc: [relativeValue, relativeMax, radius, center, this.options.strokeWidth, color],
             fill: "180-"+color[0]+"-"+color[1],
             stroke: "none"
-          })
+          }
+        )
         ,
 
         dash = paper
@@ -83,16 +119,9 @@ var RaphaelDials = {
             stroke: "#000000", 
             opacity: .1, 
             "stroke-width": this.options.strokeWidth
-          })
+          }
+        )
         ,
-
-        // mask = paper
-        //   .circle(center, center, radius-this.options.strokeWidth/2)
-        //   .attr({
-        //     fill: "#fff",
-        //     stroke: "none"
-        //   })
-        // ,
 
         scrubber = paper
           .circle()
@@ -103,42 +132,8 @@ var RaphaelDials = {
             "stroke-width": 1,
             fill: "90-#e0e1e2-#fff"
           })
-          .drag(
-            function(dx,dy,x,y,event){
-
-              var dialData = this.data("dialData"),
-                  relativeValue = RaphaelDials.xyToValue.call(this, event),
-                  inputVal = parseInt(
-                    relativeValue + dialData.absoluteMin
-                  );
-
-              this.attr({scrubber: [relativeValue, relativeMax, radius, center, dialData.strokeWidth]})
-              
-              this.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth, dialData.color ]});
-              
-              //mc changed to add .change(), triggering the event
-              dialData.$el.val(inputVal).change();
-
-            }
-          )
-          .touchmove(
-            function(event){
-
-              var dialData = this.data("dialData"),
-                  relativeValue = RaphaelDials.xyToValue.call(this, event),
-                  inputVal = parseInt(
-                    relativeValue + dialData.absoluteMin
-                  );
-              
-              this.attr({scrubber: [relativeValue, relativeMax, radius, center, dialData.strokeWidth]})
-              
-              this.prev.prev.attr({arc: [ relativeValue, relativeMax, radius, center, dialData.strokeWidth ]});
-              
-               //mc changed to add .change(), triggering the event
-              dialData.$el.val(inputVal).change();
-
-            }
-          );
+          .drag( navigator.userAgent.match(/Android/i) ? function(){return} : dragHandler )
+          .touchmove( dragHandler );
 
         $(dash.node).attr("stroke-dasharray", "7,2")
 
@@ -186,22 +181,6 @@ var RaphaelDials = {
 
     }
 
-  },
-
-  xyToValue: function(e) {
-
-    var dialData = this.data("dialData")
-
-    var x = (typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : ((typeof e.pageX !== 'undefined') ? e.pageX : null),
-        y = (typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : ((typeof e.pageY !== 'undefined') ? e.pageY : null);
-
-    var posx = x  - $(this.paper.canvas).offset().left - dialData.center;
-    var posy = y  - $(this.paper.canvas).offset().top - dialData.center;
-    var angle = Math.atan2(posy, posx) / Math.PI * 180 + 90
-    var angle = (angle < 0 ? angle+360 : angle)
-    var relativeValue = angle * dialData.relativeMax / 360;
-    
-    return relativeValue
   }
 
 };
