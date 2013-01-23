@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Raphaël Dials</title>
+
+        <script src="scripts/vendor/jquery.min.js"></script>
+        <script src="scripts/vendor/raphael.js"></script>
+
+    </head>
+    <body>
+        
+        <div id="thermostat"></div>
+        
+        <script>
+
+$(document).ready(function() {
+            
+    (function($){
+
+        var size = 285,
+            center = size / 2,
+            outerRadius = 130,
+            innerRadius = 98,
+            dialwidth = outerRadius - innerRadius,
+            scrubberSize = 59,
+            paper = Raphael(document.getElementById("thermostat"), size, size);
+            //paper.customAttributes.m2s = mouseToScrubber;
+
+        var dial = paper.path(
+                "M" + center + "," + (center - innerRadius)
+                + "L" + center + "," + (center - outerRadius)
+                + "A" + outerRadius + "," + outerRadius + ",0,1,1," + (center - .01) + "," + (center - outerRadius)
+                + "L" + center + "," + (center - innerRadius)
+                + "A" + innerRadius + "," + innerRadius + ",0,1,0," + (center + .01) + "," + (center - innerRadius)
+            ).attr({
+                fill: "0-#70bc45-#109247",
+                stroke: "none"
+            })
+
+        var scrubber = paper
+            .image("images/scrubber.png", center - scrubberSize / 2, 0 , 60, 60)
+            .touchmove(function(e){
+                
+                e.preventDefault();
+
+                this.transform(mouseToScrubber.call(this, e, false))
+                this.next.transform(mouseToScrubber.call(this, e, true))
+            });
+
+        var scrubberArrow = paper
+            .image("images/scrubber_arrow.png", center - scrubberSize / 2, 0 , 60, 60)
+            .touchmove(function(e){
+                
+                e.preventDefault();
+
+                this.transform(mouseToScrubber.call(this, e, true))
+                this.prev.transform(mouseToScrubber.call(this, e, false))
+            });
+
+        mouseToScrubber = function(e, rotate) {
+
+          var absX = (typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : ((typeof e.pageX !== 'undefined') ? e.pageX : null),
+              absY = (typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : ((typeof e.pageY !== 'undefined') ? e.pageY : null),
+              
+              relX = absX - $(this.paper.canvas).offset().left - center,
+              relY = absY - $(this.paper.canvas).offset().top - center,
+              
+              angle = Math.atan2(relY, relX),
+              degrees = angle * 180 / Math.PI + 90
+              radius = innerRadius + dialwidth / 2,
+              cx = (radius * Math.cos(angle)),
+              cy = center + (radius * Math.sin(angle) - scrubberSize/2);
+
+          if (rotate === true) {
+            return "T"+cx+","+cy+"R"+degrees;
+          } else {
+            return "T"+cx+","+cy;
+          }
+        };
+
+          // .attr("stroke", "none")
+          // .attr({
+          //   arc: [relativeValue, relativeMax, radius, center, this.options.strokeWidth, color],
+          //   fill: "180-"+color[0]+"-"+color[1],
+          //   stroke: "none"
+          // }
+
+          // var angle = 360 / relativeMax * relativeValue, // 
+          // a = (90 - angle) * Math.PI / 180,
+          // outerRadius = radius + strokeWidth / 2,
+          // outerX = center + outerRadius * Math.cos(a),
+          // outerY = center - outerRadius * Math.sin(a),
+          // innerRadius = radius - strokeWidth / 2,
+          // innerX = center + innerRadius * Math.cos(a),
+          // innerY = center - innerRadius * Math.sin(a),
+          // path = [
+          //   ["M", center, center - innerRadius],
+          //   ["L", center, center - outerRadius], 
+          //   ["A", outerRadius, outerRadius, 0, +(angle > 180), 1, outerX, outerY],
+          //   ["L", innerX, innerY], 
+          //   ["A", innerRadius, innerRadius, 0, +(angle > 180), 0, center, center - innerRadius]
+          // ];
+
+    })(jQuery);
+
+});
+        </script>
+
+
+    </body>
+</html>

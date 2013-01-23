@@ -81,11 +81,11 @@ var RaphaelDials = {
 
         xyToValue = function(e) {
 
-          var x = (typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : ((typeof e.pageX !== 'undefined') ? e.pageX : null),
-              y = (typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : ((typeof e.pageY !== 'undefined') ? e.pageY : null),
-              posx = x - $(this.paper.canvas).offset().left - center,
-              posy = y - $(this.paper.canvas).offset().top - center,
-              angle = Math.atan2(posy, posx) / Math.PI * 180 + 90,
+          var absX = (typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageX : ((typeof e.pageX !== 'undefined') ? e.pageX : null),
+              absY = (typeof e.changedTouches !== 'undefined') ? e.changedTouches[0].pageY : ((typeof e.pageY !== 'undefined') ? e.pageY : null),
+              relX = absX - $(this.paper.canvas).offset().left - center,
+              relY = absY - $(this.paper.canvas).offset().top - center,
+              angle = Math.atan2(relY, relX) / Math.PI * 180 + 90,
               angle = (angle < 0 ? angle+360 : angle),
               relativeValue = angle * relativeMax / 360;
           
@@ -99,8 +99,7 @@ var RaphaelDials = {
           center: center,
           strokeWidth: this.options.strokeWidth,
           color: color
-        }
-        ,
+        },
 
         sec = paper
           .path()
@@ -110,8 +109,7 @@ var RaphaelDials = {
             fill: "180-"+color[0]+"-"+color[1],
             stroke: "none"
           }
-        )
-        ,
+        ),
 
         dash = paper
           .circle(center, center, radius)
@@ -120,8 +118,7 @@ var RaphaelDials = {
             opacity: .1, 
             "stroke-width": this.options.strokeWidth
           }
-        )
-        ,
+        ),
 
         scrubber = paper
           .circle()
@@ -178,7 +175,6 @@ var RaphaelDials = {
         cy: cy, 
         r: r, 
       };
-
     }
 
   }
@@ -188,20 +184,20 @@ var RaphaelDials = {
 // Make sure Object.create is available in the browser (for our prototypal inheritance)
 if (typeof Object.create !== 'function') {
   Object.create = function(o) {
-      function F() {}
-      F.prototype = o;
-      return new F();
+    function F() {}
+    F.prototype = o;
+    return new F();
   };
 }
 
 $(function() {
   $.fn.RaphaelDials = function(options) {
-      if (this.length) {
-          return this.each(function() {
-              var myDials = Object.create(RaphaelDials);
-              myDials.init(options, this);
-              $.data(this, 'RaphaelDials', myDials);
-          });
-      }
+    if (this.length) {
+      return this.each(function() {
+        var myDials = Object.create(RaphaelDials);
+        myDials.init(options, this);
+        $.data(this, 'RaphaelDials', myDials);
+      });
+    }
   };
 });
