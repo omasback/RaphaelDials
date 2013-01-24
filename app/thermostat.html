@@ -8,11 +8,44 @@
         <script src="scripts/vendor/jquery.min.js"></script>
         <script src="scripts/vendor/raphael.js"></script>
 
+        <style>
+            #container {
+                position: relative;
+                width: 285px;
+            }
+            #labels {
+                position: absolute;
+                width: 160px;
+                height: 40px;
+                top: 113px;
+                left: 65px;
+            }
+            .label {
+                position: absolute;
+                font: bold 16px/16px Arial, sans-serif;
+                color: #fff;
+                text-align: center;
+                top: 44%;
+                width: 100%;
+                text-shadow: 1px 1px 1px #000;
+            }
+
+        </style>
+
     </head>
     <body>
-        
-        <div id="thermostat"></div>
-        
+        <div id="container">
+            <div id="thermostat"></div>
+            <div id="labels">
+                <div class="label">Short-Term</div>
+                <div class="label">Conservative</div>
+                <div class="label">Balanced</div>
+                <div class="label">Growth</div>
+                <div class="label">Aggressive Growth</div>
+                <div class="label">Most Aggressive</div>
+            </div>
+            <input id="stop_index" type="text" value="0">
+        </div>
         <script>
 
 $(document).ready(function() {
@@ -25,9 +58,79 @@ $(document).ready(function() {
             innerRadius = 98,
             dialwidth = outerRadius - innerRadius,
             scrubberSize = 59,
-            paper = Raphael(document.getElementById("thermostat"), size, size);
-            //paper.customAttributes.m2s = mouseToScrubber;
+            pieSize = 92,
+            paper = Raphael(document.getElementById("thermostat"), size, size),
+            currentStopIndex = 0;
 
+        paper.customAttributes.slice = function(value){
+            
+            var radius = pieSize,
+                radians = ( value / 50 ) * Math.PI,
+                x = center + ( Math.sin(radians) * radius ),
+                y = center - ( Math.cos(radians) * radius )
+
+            return { path: 
+                "M" + center + "," + center
+                + "L" + center + "," + (center - radius)
+                + "A" + radius + "," + radius + ",0,"+ +(radians > Math.PI) +",1," + x + "," + y
+            }
+        }
+
+        var Pie = function(value, color){
+            this.value = value;
+            this.color = color;
+
+            this.path = this.init(this.value)
+        };
+
+        Pie.prototype.init = function(value){
+
+            return paper.path().attr({
+                slice: this.value,
+                fill: this.color,
+                stroke: "none"
+            })
+        };
+
+        Pie.prototype.update = function(value) {
+
+            //tthis.path.animate({slice: value}, 200, "easeOut");
+            this.path.attr({slice: value});
+
+        }
+
+        var shortTerm = paper
+                .circle(center, center, pieSize)
+                .attr({
+                    "fill": "#0973ba",
+                    "stroke": "none"
+                })
+            international = new Pie(70, "#eb7e23"),
+            bonds =         new Pie(30, "#ec4d35"),
+            stocks =        new Pie(10, "#553e6e"),
+
+        //gradient and dashed line
+            gradient = paper
+                .circle(center, center, pieSize - 11)
+                .attr({
+                    fill: "rrgba(255, 255, 255, 100)-rgba(255, 255, 255, 0)",
+                    stroke: "#fff", 
+                    opacity: .5, 
+                    "stroke-width": 14
+                })
+
+        //dashed line 
+        $(gradient.node).attr("stroke-dasharray", "1,2")
+
+        //gradient opacity stops not suppported by raphael
+        $("stop")
+            .first()
+            .attr("stop-opacity", ".3")
+            .end()
+            .last()
+            .attr("stop-opacity", "0");
+
+        //green ring
         var dial = paper.path(
                 "M" + center + "," + (center - innerRadius)
                 + "L" + center + "," + (center - outerRadius)
@@ -39,25 +142,68 @@ $(document).ready(function() {
                 stroke: "none"
             })
 
+        // var scrubber = paper
+        //     .image("images/scrubber.png", center - scrubberSize / 2, 0 , 60, 60)
+        //     .touchmove(function(e){
+                
+        //         e.preventDefault();
+
+        //         this.transform(mouseToScrubber.call(this, e, false))
+        //         this.next.transform(mouseToScrubber.call(this, e, true))
+        //     });
+
         var scrubber = paper
             .image("images/scrubber.png", center - scrubberSize / 2, 0 , 60, 60)
             .touchmove(function(e){
                 
                 e.preventDefault();
 
-                this.transform(mouseToScrubber.call(this, e, false))
-                this.next.transform(mouseToScrubber.call(this, e, true))
-            });
+                var m2s = mouseToScrubber.call(this, e, true),
+                    stopIndex;
 
-        var scrubberArrow = paper
-            .image("images/scrubber_arrow.png", center - scrubberSize / 2, 0 , 60, 60)
-            .touchmove(function(e){
+
+
+                stopIndex = Math.floor(m2s.degrees / 60);
+
+                this.transform(m2s.transform)
+
+                if (currentStopIndex !== stopIndex) {
+
+                    currentStopIndex = stopIndex;
+                    $('#stop_index').val(stopIndex);
+                    $('.label').fadeOut().eq(stopIndex).fadeIn();
+
+                    if ( stopIndex === 0 ) {
+                        international.update(90);
+                        bonds.update(70);
+                        stocks.update(60);
+                    } else if ( stopIndex === 1 ) {
+                        international.update(80);
+                        bonds.update(60);
+                        stocks.update(50);
+                    } else if ( stopIndex === 2 ) {
+                        international.update(70);
+                        bonds.update(50);
+                        stocks.update(40);
+                    } else if ( stopIndex === 3 ) {
+                        international.update(60);
+                        bonds.update(40);
+                        stocks.update(30);
+                    } else if ( stopIndex === 4 ) {
+                        international.update(40);
+                        bonds.update(30);
+                        stocks.update(20);
+                    } else if ( stopIndex === 5 ) {
+                        international.update(30);
+                        bonds.update(20);
+                        stocks.update(10);
+                    }
+
+                }
                 
-                e.preventDefault();
 
-                this.transform(mouseToScrubber.call(this, e, true))
-                this.prev.transform(mouseToScrubber.call(this, e, false))
-            });
+            })
+        ;
 
         mouseToScrubber = function(e, rotate) {
 
@@ -68,40 +214,24 @@ $(document).ready(function() {
               relY = absY - $(this.paper.canvas).offset().top - center,
               
               angle = Math.atan2(relY, relX),
-              degrees = angle * 180 / Math.PI + 90
+              degrees = angle * 180 / Math.PI + 90,
+              degrees = (degrees < 0) ? degrees + 360 : degrees,
               radius = innerRadius + dialwidth / 2,
               cx = (radius * Math.cos(angle)),
               cy = center + (radius * Math.sin(angle) - scrubberSize/2);
 
           if (rotate === true) {
-            return "T"+cx+","+cy+"R"+degrees;
+            return {
+                transform: "T"+cx+","+cy+"R"+degrees,
+                degrees: degrees
+            };
           } else {
-            return "T"+cx+","+cy;
+            return {
+                transform: "T"+cx+","+cy,
+                degrees: degrees
+            };
           }
         };
-
-          // .attr("stroke", "none")
-          // .attr({
-          //   arc: [relativeValue, relativeMax, radius, center, this.options.strokeWidth, color],
-          //   fill: "180-"+color[0]+"-"+color[1],
-          //   stroke: "none"
-          // }
-
-          // var angle = 360 / relativeMax * relativeValue, // 
-          // a = (90 - angle) * Math.PI / 180,
-          // outerRadius = radius + strokeWidth / 2,
-          // outerX = center + outerRadius * Math.cos(a),
-          // outerY = center - outerRadius * Math.sin(a),
-          // innerRadius = radius - strokeWidth / 2,
-          // innerX = center + innerRadius * Math.cos(a),
-          // innerY = center - innerRadius * Math.sin(a),
-          // path = [
-          //   ["M", center, center - innerRadius],
-          //   ["L", center, center - outerRadius], 
-          //   ["A", outerRadius, outerRadius, 0, +(angle > 180), 1, outerX, outerY],
-          //   ["L", innerX, innerY], 
-          //   ["A", innerRadius, innerRadius, 0, +(angle > 180), 0, center, center - innerRadius]
-          // ];
 
     })(jQuery);
 
